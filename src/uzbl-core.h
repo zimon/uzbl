@@ -240,6 +240,9 @@ read_file_by_line (const gchar *path);
 gchar*
 parseenv (gchar* string);
 
+gchar *
+process_if (gchar *argv);
+
 void
 clean_up(void);
 
@@ -470,6 +473,9 @@ hardcopy(WebKitWebView *page, GArray *argv, GString *result);
 
 void
 include(WebKitWebView *page, GArray *argv, GString *result);
+
+void
+ifcmd (WebKitWebView *page, GArray *argv, GString *result);
 
 void
 builtins();

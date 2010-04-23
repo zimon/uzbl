@@ -345,6 +345,22 @@ expand(const char *s, guint recurse) {
                 ret = NULL;
                 break;
 
+            case 'i':
+                if(*(s+1) == 'f' && *(s+2) == '('){
+                    s+=2;
+                    vend = g_strrstr(s, "}");
+                    if(!vend) vend = strchr(s, '\0');
+                    assert(vend);
+
+                    ret = g_strndup(s, vend-s+1);
+                    g_string_append(buf, process_if(ret));
+
+                    s = vend+1;
+                    g_free(ret);
+                    ret = NULL;
+                    break;
+                }
+
             default:
                 g_string_append_c(buf, *s);
                 s++;
@@ -491,6 +507,92 @@ parseenv (gchar* string) {
     }
 
     return out;
+}
+
+gchar *process_if(gchar* argv){
+    GMatchInfo *match_info;
+    gchar *new_argv = NULL;
+    gchar *condition = NULL;
+    gchar *cmd = NULL;
+    gchar *cmd_else = NULL;
+    gchar *ret = NULL;
+    int condition_result;
+    GRegex *get_parts = g_regex_new(".*\\(([^)]+)\\)\\s*{([^}]*)}\\s*else\\s*{([^}]*)}$",0,0,NULL);
+
+    if (g_strstr_len (argv, -1, "else") == NULL) {
+        new_argv = g_strconcat (argv, "else{}", NULL);
+    } else {
+        new_argv = g_strconcat (argv, NULL);
+    }
+    if(!g_regex_match(get_parts,new_argv,0,&match_info)){
+        printf("invalid if command called with arg: %s\n",new_argv);
+        return "";
+    }
+
+    condition = g_regex_replace(get_parts,new_argv,-1,0,"\\1",0,NULL);
+    cmd = g_regex_replace(get_parts,new_argv,-1,0,"\\2",0,NULL);
+    cmd_else = g_regex_replace(get_parts,new_argv,-1,0,"\\3",0,NULL);
+
+    g_regex_unref(get_parts);
+    g_free(new_argv);
+
+    gchar **split = g_strsplit(condition, " ", 3);
+    g_free(condition);
+    if(g_strv_length(split) < 3){
+        if(g_strcmp0(expand(split[0],0),"") != 0){
+            ret = cmd;
+        } else {
+            ret = cmd_else;
+        }
+    } else {
+        condition_result = g_strcmp0(expand(split[0],0),expand(split[2],0));
+
+    
+         if(g_strcmp0(split[1], "<=") == 0) {
+            if(condition_result == 0 || condition_result == -1){
+                ret = cmd;
+            } else {
+                ret = cmd_else;
+            }
+        } else if(g_strcmp0(split[1], ">=") == 0) {
+            if(condition_result == 0 || condition_result == 1){
+                ret = cmd;
+            } else {
+                ret = cmd_else;
+            }
+        } else if(g_strcmp0(split[1], "==") == 0){
+            if(condition_result == 0){
+                ret = cmd;
+            } else {
+                ret = cmd_else;
+            }
+        } else if(g_strcmp0(split[1], "!=") == 0) {
+            if(condition_result != 0){
+                ret = cmd;
+            } else {
+                ret = cmd_else;
+            }
+        } else if(g_strcmp0(split[1], "<") == 0) {
+            if(condition_result == -1){
+                ret = cmd;
+            } else {
+                ret = cmd_else;
+            }
+        } else if(g_strcmp0(split[1], ">") == 0) {
+            if(condition_result == 1){
+                ret = cmd;
+            } else {
+                ret = cmd_else;
+            }
+        } else {
+            printf("no proper condition\n");
+            ret = "";
+        }
+    }
+
+    
+    g_free(split);
+    return expand(ret,0);
 }
 
 void
@@ -705,7 +807,8 @@ struct {const char *key; CommandInfo value;} cmdlist[] =
     { "menu_image_remove",              {menu_remove_image, TRUE}       },
     { "menu_editable_remove",           {menu_remove_edit, TRUE}        },
     { "hardcopy",                       {hardcopy, TRUE}                },
-    { "include",                        {include, TRUE}                 }
+    { "include",                        {include, TRUE}                 },
+    { "if",                             {ifcmd, TRUE}                   }
 };
 
 void
@@ -734,6 +837,13 @@ builtins() {
 }
 
 /* -- CORE FUNCTIONS -- */
+
+void
+ifcmd (WebKitWebView *page, GArray *argv, GString *result) {
+    (void) page;
+    gchar *line = argv_idx(argv, 0);
+    parse_cmd_line(process_if(line),result);
+}
 
 bool
 file_exists (const char * filename) {
