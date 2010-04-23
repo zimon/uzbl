@@ -346,7 +346,7 @@ expand(const char *s, guint recurse) {
                 break;
 
             case 'i':
-                if(*(s+1) == 'f' && *(s+2) == '('){
+                if((*(s+1) == 'f' && *(s+2) == '(') || (*(s+1) == 'f' && *(s+2) == ' ' && *(s+3) == '(')){
                     s+=2;
                     vend = g_strrstr(s, "}");
                     if(!vend) vend = strchr(s, '\0');
