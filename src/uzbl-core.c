@@ -180,8 +180,8 @@ get_exp_type(const gchar *s) {
         return EXP_JS;
     else if(*(s+1) == '[')
         return EXP_ESCAPE;
-    else if(*(s+1) == 'i' && *(s+2) == 'f' && *(s+3) == ' ' && *(s+4) == '('
-            || *(s+1) == 'i' && *(s+2) == 'f' && *(s+3) == '(')
+    else if((*(s+1) == 'i' && *(s+2) == 'f' && *(s+3) == ' ' && *(s+4) == '(')
+            || (*(s+1) == 'i' && *(s+2) == 'f' && *(s+3) == '('))
         return EXP_IF;
     else
         return EXP_SIMPLE_VAR;
