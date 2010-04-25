@@ -363,22 +363,6 @@ expand(const char *s, guint recurse) {
                 ret = NULL;
                 break;
 
-//            case 'i':
-//                if((*(s+1) == 'f' && *(s+2) == '(') || (*(s+1) == 'f' && *(s+2) == ' ' && *(s+3) == '(')){
-//                    s+=2;
-//                    vend = g_strrstr(s, "}");
-//                    if(!vend) vend = strchr(s, '\0');
-//                    assert(vend);
-//
-//                    ret = g_strndup(s, vend-s+1);
-//                    g_string_append(buf, process_if(ret));
-//
-//                    s = vend+1;
-//                    g_free(ret);
-//                    ret = NULL;
-//                    break;
-//                }
-
             default:
                 g_string_append_c(buf, *s);
                 s++;
