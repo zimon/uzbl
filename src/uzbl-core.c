@@ -168,7 +168,7 @@ create_var_to_name_hash() {
 
 
 /* --- UTILITY FUNCTIONS --- */
-enum exp_type {EXP_ERR, EXP_SIMPLE_VAR, EXP_BRACED_VAR, EXP_EXPR, EXP_JS, EXP_ESCAPE};
+enum exp_type {EXP_ERR, EXP_SIMPLE_VAR, EXP_BRACED_VAR, EXP_EXPR, EXP_JS, EXP_ESCAPE, EXP_IF};
 enum exp_type
 get_exp_type(const gchar *s) {
     /* variables */
@@ -180,6 +180,10 @@ get_exp_type(const gchar *s) {
         return EXP_JS;
     else if(*(s+1) == '[')
         return EXP_ESCAPE;
+    else if(*(s+1) == 'i' && *(s+2) == 'f' && *(s+3) == ' ' && *(s+4) == '('
+            || *(s+1) == 'i' && *(s+2) == 'f' && *(s+3) == '('){
+        printf("starting if found\n");
+        return EXP_IF;}
     else
         return EXP_SIMPLE_VAR;
 
@@ -239,6 +243,11 @@ expand(const char *s, guint recurse) {
                         s++;
                         vend = strstr(s, "]@");
                         if(!vend) vend = strchr(s, '\0');
+                        break;
+                    case EXP_IF:
+                        s++;
+                        vend = strstr(s, "}@")+1;
+                        if(!vend){ vend = strchr(s, '\0');} else { printf("ending if found\n");}
                         break;
                     /*@notreached@*/
                     case EXP_ERR:
@@ -340,26 +349,36 @@ expand(const char *s, guint recurse) {
                     g_free(mycmd);
                     s = vend+2;
                 }
+                else if(etype == EXP_IF) {
+                    //mycmd = expand(ret, 0);
+                    char *ifresult = process_if(ret);
+
+                    g_string_append(buf, ifresult);
+
+                    g_free(ifresult);
+                    g_free(mycmd);
+                    s = vend+1;
+                }
 
                 g_free(ret);
                 ret = NULL;
                 break;
 
-            case 'i':
-                if((*(s+1) == 'f' && *(s+2) == '(') || (*(s+1) == 'f' && *(s+2) == ' ' && *(s+3) == '(')){
-                    s+=2;
-                    vend = g_strrstr(s, "}");
-                    if(!vend) vend = strchr(s, '\0');
-                    assert(vend);
-
-                    ret = g_strndup(s, vend-s+1);
-                    g_string_append(buf, process_if(ret));
-
-                    s = vend+1;
-                    g_free(ret);
-                    ret = NULL;
-                    break;
-                }
+//            case 'i':
+//                if((*(s+1) == 'f' && *(s+2) == '(') || (*(s+1) == 'f' && *(s+2) == ' ' && *(s+3) == '(')){
+//                    s+=2;
+//                    vend = g_strrstr(s, "}");
+//                    if(!vend) vend = strchr(s, '\0');
+//                    assert(vend);
+//
+//                    ret = g_strndup(s, vend-s+1);
+//                    g_string_append(buf, process_if(ret));
+//
+//                    s = vend+1;
+//                    g_free(ret);
+//                    ret = NULL;
+//                    break;
+//                }
 
             default:
                 g_string_append_c(buf, *s);
