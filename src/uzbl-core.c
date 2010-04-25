@@ -181,9 +181,8 @@ get_exp_type(const gchar *s) {
     else if(*(s+1) == '[')
         return EXP_ESCAPE;
     else if(*(s+1) == 'i' && *(s+2) == 'f' && *(s+3) == ' ' && *(s+4) == '('
-            || *(s+1) == 'i' && *(s+2) == 'f' && *(s+3) == '('){
-        printf("starting if found\n");
-        return EXP_IF;}
+            || *(s+1) == 'i' && *(s+2) == 'f' && *(s+3) == '(')
+        return EXP_IF;
     else
         return EXP_SIMPLE_VAR;
 
@@ -247,7 +246,7 @@ expand(const char *s, guint recurse) {
                     case EXP_IF:
                         s++;
                         vend = strstr(s, "}@")+1;
-                        if(!vend){ vend = strchr(s, '\0');} else { printf("ending if found\n");}
+                        if(!vend) vend = strchr(s, '\0');
                         break;
                     /*@notreached@*/
                     case EXP_ERR:
