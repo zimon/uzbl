@@ -513,11 +513,15 @@ gchar *process_if(gchar* argv){
     GMatchInfo *match_info;
     gchar *new_argv = NULL;
     gchar *condition = NULL;
+    gchar *condition_string1 = NULL;
+    gchar *condition_string2 = NULL;
+    gchar *condition_operator = NULL;
     gchar *cmd = NULL;
     gchar *cmd_else = NULL;
     gchar *ret = NULL;
     int condition_result;
     GRegex *get_parts = g_regex_new(".*\\(([^)]+)\\)\\s*{([^}]*)}\\s*else\\s*{([^}]*)}$",0,0,NULL);
+    GRegex *split_condition = g_regex_new("(.+?)\\s*(==|!=|<=|>=|<|>)\\s*(.+?)$",0,0,NULL);
 
     if (g_strstr_len (argv, -1, "else") == NULL) {
         new_argv = g_strconcat (argv, "else{}", NULL);
@@ -533,52 +537,53 @@ gchar *process_if(gchar* argv){
     cmd = g_regex_replace(get_parts,new_argv,-1,0,"\\2",0,NULL);
     cmd_else = g_regex_replace(get_parts,new_argv,-1,0,"\\3",0,NULL);
 
-    g_regex_unref(get_parts);
-    g_free(new_argv);
+    condition_string1 = g_regex_replace(split_condition,condition,-1,0,"\\1",0,NULL);
+    condition_operator = g_regex_replace(split_condition,condition,-1,0,"\\2",0,NULL);
+    condition_string2 = g_regex_replace(split_condition,condition,-1,0,"\\3",0,NULL);
 
-    gchar **split = g_strsplit(condition, " ", 3);
+    g_free(new_argv);
     g_free(condition);
-    if(g_strv_length(split) < 3){
-        if(g_strcmp0(expand(split[0],0),"") != 0){
+
+    if(g_strcmp0(condition_string1,condition_operator) == 0){
+        if(g_strcmp0(expand(condition_string1,0),"") != 0){
             ret = cmd;
         } else {
             ret = cmd_else;
         }
     } else {
-        condition_result = g_strcmp0(expand(split[0],0),expand(split[2],0));
+        condition_result = g_strcmp0(expand(condition_string1,0),expand(condition_string2,0));
 
-    
-         if(g_strcmp0(split[1], "<=") == 0) {
+         if(g_strcmp0(condition_operator, "<=") == 0) {
             if(condition_result == 0 || condition_result == -1){
                 ret = cmd;
             } else {
                 ret = cmd_else;
             }
-        } else if(g_strcmp0(split[1], ">=") == 0) {
+        } else if(g_strcmp0(condition_operator, ">=") == 0) {
             if(condition_result == 0 || condition_result == 1){
                 ret = cmd;
             } else {
                 ret = cmd_else;
             }
-        } else if(g_strcmp0(split[1], "==") == 0){
+        } else if(g_strcmp0(condition_operator, "==") == 0){
             if(condition_result == 0){
                 ret = cmd;
             } else {
                 ret = cmd_else;
             }
-        } else if(g_strcmp0(split[1], "!=") == 0) {
+        } else if(g_strcmp0(condition_operator, "!=") == 0) {
             if(condition_result != 0){
                 ret = cmd;
             } else {
                 ret = cmd_else;
             }
-        } else if(g_strcmp0(split[1], "<") == 0) {
+        } else if(g_strcmp0(condition_operator, "<") == 0) {
             if(condition_result == -1){
                 ret = cmd;
             } else {
                 ret = cmd_else;
             }
-        } else if(g_strcmp0(split[1], ">") == 0) {
+        } else if(g_strcmp0(condition_operator, ">") == 0) {
             if(condition_result == 1){
                 ret = cmd;
             } else {
@@ -591,7 +596,9 @@ gchar *process_if(gchar* argv){
     }
 
     
-    g_free(split);
+    g_free(condition_string1);
+    g_free(condition_string2);
+    g_free(condition_operator);
     return expand(ret,0);
 }
 
@@ -841,8 +848,8 @@ builtins() {
 void
 ifcmd (WebKitWebView *page, GArray *argv, GString *result) {
     (void) page;
-    gchar *line = argv_idx(argv, 0);
-    parse_cmd_line(process_if(line),result);
+    gchar *cmd = process_if(argv_idx(argv, 0));
+    parse_cmd_line(cmd,result);
 }
 
 bool
