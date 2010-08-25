@@ -39,6 +39,7 @@ In alphabetical order:
     Dmytro Milinevskyy - uzbl-tabbed useability patches
     Dusan Popovic (dusanx) - many contributions to early uzbl
     Evgeny Grablyk - libsoup settings
+    Gustavo Chaín <g@0xff.cl> - newbg command
     Gregor Uhlenheuer (kongo2002) <kongo2002@googlemail.com> - uzbl vim syntax & related files
     Helmut Grohne (helmut) - move void **ptr to union, various fixes
     Henri Kemppainen (DuClare) <email is akarinotengoku AT THE DOMAIN OF gmail.com> - many contributions, mostly old handler code
@@ -49,8 +50,10 @@ In alphabetical order:
     Jan Kolkmeier (jouz) - scrolling, link following
     Jason Woofenden (JasonWoof) - geometry=maximized, link following
     Laurence Withers (lwithers) - talk_to_socket
+    Luca Bruno <lucab@debian.org> - bashims fixes
     Mark Nevill - misc patches
     Mason Larobina (mason-l) <mason.larobina@gmail.com> - uzbl-tabbed, uzbl-cookie-daemon, uzbl-event-manager & plugins, uzbl vim syntax ...
+    Matthew Bauer <mjbauer95@gmail.com> - userscripts
     Maximilian Gaß (mxey) - several small patches
     Michael Fiano (axionix) - added cookie_daemon.py whitelist
     Michael Walker (Barrucadu) <mike AT barrucadu.co.uk> - contributions to early uzbl

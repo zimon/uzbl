@@ -64,6 +64,9 @@ set authentication_handler = sync_spawn @scripts_dir/auth.py
 # Load commit handlers
 @on_event   LOAD_COMMIT    @set_status <span foreground="green">recv</span>
 
+# Userscript support. Add all scripts to $XDG_DATA_HOME/uzbl/userscripts
+#@on_event   LOAD_COMMIT    spawn @scripts_dir/userscripts.sh
+
 # Load finish handlers
 @on_event   LOAD_FINISH    @set_status <span foreground="gold">done</span>
 @on_event   LOAD_FINISH    spawn @scripts_dir/history.sh
@@ -173,7 +176,7 @@ set ebind     = @mode_bind global,-insert
 # --- Mouse bindings ---------------------------------------------------------
 
 # Middle click open in new window
-@bind  <Button2>  = sh 'if [ "\@SELECTED_URI" ]; then uzbl-browser -u "\@SELECTED_URI"; else echo "uri $(xclip -o | sed s/\\\@/%40/g)" > $4; fi'
+@bind  <Button2>  = sh 'if [ "$8" ]; then uzbl-browser -u "$8"; else echo "uri $(xclip -o | sed s/\\\@/%40/g)" > $4; fi' \@SELECTED_URI
 
 # --- Keyboard bindings ------------------------------------------------------
 
@@ -220,6 +223,7 @@ set ebind     = @mode_bind global,-insert
 
 # Web searching binds
 @cbind  gg<Google:>_         = uri http://www.google.com/search?q=\@<encodeURIComponent(%r)>\@
+@cbind  ddg<DuckDuckGo:>_    = uri http://duckduckgo.com/?q=%s
 @cbind  \\awiki<Archwiki:>_  = uri http://wiki.archlinux.org/index.php/Special:Search?search=\@<encodeURIComponent(%r)>\@&go=Go
 @cbind  \\wiki<Wikipedia:>_  = uri http://en.wikipedia.org/w/index.php?title=Special:Search&search=\@<encodeURIComponent(%r)>\@&go=Go
 
@@ -251,8 +255,8 @@ set ebind     = @mode_bind global,-insert
 @cbind  gh  = uri http://www.uzbl.org
 
 # Yanking & pasting binds
-@cbind  yu  = sh 'echo -n $6 | xclip'
-@cbind  yy  = sh 'echo -n $7 | xclip'
+@cbind  yu  = sh 'printf $6 | xclip'
+@cbind  yy  = sh 'printf $7 | xclip'
 
 # Go the page from primary selection
 @cbind  p   = sh 'echo "uri `xclip -selection primary -o | sed s/\\\@/%40/g`" > $4'
@@ -264,7 +268,7 @@ set ebind     = @mode_bind global,-insert
 @bind <Shift-Insert> = sh 'echo "event INJECT_KEYCMD `xclip -o | sed s/\\\@/%40/g`" > $4'
 
 # Bookmark inserting binds
-@cbind <Ctrl>b<tags:>_  = sh 'echo -e "$6 %s" >> $XDG_DATA_HOME/uzbl/bookmarks'
+@cbind <Ctrl>b<tags:>_  = sh 'echo `printf "$6 %s"` >> $XDG_DATA_HOME/uzbl/bookmarks'
 # Or use a script to insert a bookmark.
 @cbind  B  = spawn @scripts_dir/insert_bookmark.sh
 
@@ -278,7 +282,8 @@ set follow_hint_keys = 0123456789
 #set follow_hint_keys = qwerty
 #set follow_hint_keys = asdfghjkl;
 #set follow_hint_keys = thsnd-rcgmvwb/;789aefijkopquxyz234
-@cbind  fl*  = script @scripts_dir/follow.js '@follow_hint_keys %s'
+@cbind  fl*  = spawn @scripts_dir/follow.sh "%s"
+@cbind  gi   = spawn @scripts_dir/go_input.sh
 
 # Form filler binds
 # This script allows you to configure (per domain) values to fill in form
